@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Huno Movie | Admin Panel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="bg-gray-900 text-white flex">
+
+<!-- SIDEBAR -->
+<div class="w-64 min-h-screen bg-black p-6 space-y-8">
+    <h1 class="text-3xl font-black text-red-600">HUNO ADMIN</h1>
+    <nav class="space-y-4">
+        <button onclick="showTab('user-tab')" class="block w-full text-left hover:text-red-500 py-2">
+            <i class="fas fa-users mr-2"></i> Khách hàng
+        </button>
+        <button onclick="showTab('film-tab')" class="block w-full text-left hover:text-red-500 py-2">
+            <i class="fas fa-film mr-2"></i> Quản lý Phim
+        </button>
+    </nav>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 p-10">
+
+<!-- USERS -->
+<div id="user-tab" class="tab-content">
+    <h2 class="text-2xl font-bold mb-6">Danh sách khách hàng</h2>
+    <table class="w-full bg-gray-800 rounded-lg overflow-hidden text-center">
+        <thead class="bg-gray-700 text-gray-300">
+            <tr>
+                <th class="p-4">ID</th>
+                <th class="p-4">User</th>
+                <th class="p-4">Email</th>
+                <th class="p-4">Role</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="user-list"></tbody>
+    </table>
+</div>
+
+<!-- FILMS -->
+<div id="film-tab" class="tab-content hidden">
+
+    <div class="flex justify-between mb-6">
+        <h2 class="text-2xl font-bold">Quản lý phim</h2>
+        <button onclick="toggleModal()" class="bg-green-600 px-4 py-2 rounded font-bold hover:bg-green-700">
+            + Thêm phim
+        </button>
+    </div>
+
+    <!-- MODAL -->
+    <div id="add-film-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        
+        <div class="absolute inset-0 bg-black bg-opacity-75 backdrop-blur-md" onclick="toggleModal()"></div>
+
+        <div class="relative bg-gray-900 w-full max-w-5xl rounded-2xl shadow-2xl border border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[90vh] animate-in fade-in zoom-in duration-300">
+            
+            <div class="md:w-1/3 bg-gray-800 p-6 border-b md:border-b-0 md:border-r border-gray-700 overflow-y-auto">
+                <h3 class="text-blue-400 font-bold text-lg mb-4 flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i> HƯỚNG DẪN
+                </h3>
+                <div class="space-y-4 text-sm text-gray-300">
+                    <div class="bg-gray-900 p-3 rounded-lg border-l-4 border-blue-500">
+                        <p class="font-bold text-white mb-1">1. Tải lên video:</p>
+                        <p>Nhấn nút "Chọn File Video", giữ phím <kbd class="bg-gray-700 px-1 rounded">Ctrl</kbd> để chọn nhiều tập một lúc. Hệ thống sẽ tự tạo danh sách link. Còn nếu muốn thêm link từ youtube thì cách lấy link là watch?v=<b>wkckCahPeJ0</b> lấy phần này trên link dán vào sau dấu phẩy là đc </p>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded-lg border-l-4 border-red-500">
+                        <p class="font-bold text-white mb-1">2. Định dạng ảnh:</p>
+                        <p>- **Thumbnail:** Ảnh đứng (tỉ lệ 2:3).</p>
+                        <p>- **Poster:** Ảnh ngang (tỉ lệ 16:9).</p>
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded-lg border-l-4 border-yellow-500">
+                        <p class="font-bold text-white mb-1">3. Phân cách tập:</p>
+                        <p>Mỗi link phim trong ô "Danh sách link" phải ngăn cách nhau bằng dấu phẩy (<span class="text-yellow-400">,</span>).</p>
+                    </div>
+                    <div class="p-3">
+                        <p class="italic text-xs text-gray-500 text-center">Lưu ý: Chờ trạng thái báo "✅ Đã tải xong" trước khi nhấn Lưu Phim.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:w-2/3 p-8 overflow-y-auto">
+                <button onclick="toggleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+
+                <h2 class="text-xl font-bold mb-6 text-red-500 flex items-center">
+                    <i class="fas fa-film mr-2"></i> 
+                    <span>QUẢN LÝ THÔNG TIN PHIM</span>
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input id="f-name" placeholder="Tên phim" class="p-3 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-600">
+                    <input id="f-duration" placeholder="Thời lượng (vd: 120 phút)" class="p-3 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-600">
+
+                    <input id="f-episodes" placeholder="Số tập (vd: 1 hoặc 12/12)" class="p-3 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-600">
+                    
+                    <div class="space-y-2">
+                        <label class="bg-blue-600 px-4 py-3 rounded cursor-pointer hover:bg-blue-700 transition shadow-lg w-full text-center block text-sm font-bold">
+                            <i class="fas fa-upload mr-2"></i> Chọn File Video
+                            <input type="file" id="video-file" class="hidden" accept="video/*" multiple onchange="uploadVideoFile()">
+                        </label>
+                        <div id="upload-status" class="text-xs text-blue-400 hidden italic text-center">Đang chuẩn bị...</div>
+                    </div>
+
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase">Danh sách link video</label>
+                        <textarea id="f-videos" placeholder="Link video tập 1, link tập 2..." class="w-full p-3 bg-gray-800 border border-gray-700 rounded h-20 focus:outline-none focus:ring-2 focus:ring-red-600 text-xs text-blue-300"></textarea>
+                    </div>
+
+                    <input id="f-genres" placeholder="Thể loại (Hành động, Kinh dị...)" class="p-3 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-red-600">
+                    <select id="f-type" class="p-3 bg-gray-800 border border-gray-700 rounded text-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600">
+                        <option value="Phim Lẻ">Phim Lẻ</option>
+                        <option value="Phim Bộ">Phim Bộ</option>
+                    </select>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase">Thumbnail (Ảnh đứng)</label>
+                        <div class="flex gap-2">
+                            <input id="f-image" placeholder="Link thumbnail..." class="flex-1 p-3 bg-gray-800 border border-gray-700 rounded text-xs focus:outline-none focus:ring-2 focus:ring-red-600" oninput="previewImg()">
+                            <label class="bg-gray-700 px-3 py-3 rounded cursor-pointer hover:bg-gray-600 transition shadow-lg border border-gray-600">
+                                <i class="fas fa-image"></i>
+                                <input type="file" class="hidden" accept="image/*" onchange="uploadImage(this, 'f-image')">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase">Poster (Ảnh ngang)</label>
+                        <div class="flex gap-2">
+                            <input id="f-poster" placeholder="Link poster..." class="flex-1 p-3 bg-gray-800 border border-gray-700 rounded text-xs focus:outline-none focus:ring-2 focus:ring-red-600">
+                            <label class="bg-gray-700 px-3 py-3 rounded cursor-pointer hover:bg-gray-600 transition shadow-lg border border-gray-600">
+                                <i class="fas fa-camera"></i>
+                                <input type="file" class="hidden" accept="image/*" onchange="uploadImage(this, 'f-poster')">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-span-1 md:col-span-2 flex flex-col items-center justify-center bg-black bg-opacity-30 rounded p-4 border border-dashed border-gray-600">
+                        <img id="preview" src="" class="h-24 rounded shadow-lg hidden mb-2" alt="Preview">
+                        <p id="preview-text" class="text-gray-500 text-[10px]">Preview ảnh thumbnail</p>
+                    </div>
+
+                    <textarea id="f-desc" class="col-span-1 md:col-span-2 p-3 bg-gray-800 border border-gray-700 rounded h-20 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Mô tả nội dung phim..."></textarea>
+
+                    <button id="save-btn" onclick="addFilm()" class="col-span-1 md:col-span-2 bg-red-600 py-3 rounded font-bold hover:bg-red-700 transition duration-300 transform hover:scale-[1.01] shadow-lg mt-2">
+                        <i class="fas fa-save mr-2"></i> LƯU PHIM VÀO HỆ THỐNG
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- LIST -->
+    <div id="film-list" class="space-y-4"></div>
+
+</div>
+
+</div>
+
+<script src="admin.js"></script>
+
+</body>
+</html>

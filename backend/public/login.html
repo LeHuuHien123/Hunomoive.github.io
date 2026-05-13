@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huno Movie | Xác thực</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                        url('https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=2073&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+        .hidden-form { display: none; }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center">
+
+    <div class="bg-black bg-opacity-80 p-10 md:p-16 rounded-lg w-full max-w-[450px] shadow-2xl">
+        
+        <div id="login-form">
+            <h1 class="text-white text-3xl font-bold mb-8">Đăng nhập</h1>
+            <div class="space-y-4">
+                <input id="login-user" type="text" placeholder="Tên đăng nhập" 
+                       class="w-full p-4 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition">
+                <input id="login-pass" type="password" placeholder="Mật khẩu" 
+                       class="w-full p-4 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition">
+                
+                <p id="login-error" class="text-red-500 text-sm hidden"></p>
+                
+                <button onclick="handleLogin()" 
+                        class="w-full bg-red-600 text-white font-bold py-3 rounded hover:bg-red-700 transition transform active:scale-95">
+                    Đăng nhập
+                </button>
+            </div>
+            <p class="text-gray-400 mt-8">
+                Mới tham gia Huno Movie? 
+                <a href="javascript:void(0)" onclick="toggleForm()" class="text-white hover:underline font-semibold">Đăng ký ngay.</a>
+            </p>
+        </div>
+
+        <div id="register-form" class="hidden-form">
+            <h1 class="text-white text-3xl font-bold mb-8">Đăng ký</h1>
+            <div class="space-y-4">
+                <input id="reg-user" type="text" placeholder="Tên đăng nhập mới" 
+                       class="w-full p-4 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition">
+                <input id="reg-pass" type="password" placeholder="Mật khẩu (ít nhất 6 ký tự)" 
+                       class="w-full p-4 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition">
+                <input id="reg-confirm" type="password" placeholder="Xác nhận mật khẩu" 
+                       class="w-full p-4 bg-gray-800 rounded text-white focus:outline-none focus:ring-2 focus:ring-red-600 transition">
+                
+                <p id="reg-error" class="text-red-500 text-sm hidden"></p>
+
+                <button onclick="handleRegister()" 
+                        class="w-full bg-red-600 text-white font-bold py-3 rounded hover:bg-red-700 transition transform active:scale-95">
+                    Tạo tài khoản
+                </button>
+            </div>
+            <p class="text-gray-400 mt-8">
+                Đã có tài khoản? 
+                <a href="javascript:void(0)" onclick="toggleForm()" class="text-white hover:underline font-semibold">Đăng nhập tại đây.</a>
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // Hàm chuyển đổi qua lại giữa Đăng nhập và Đăng ký
+        function toggleForm() {
+            document.getElementById('login-form').classList.toggle('hidden-form');
+            document.getElementById('register-form').classList.toggle('hidden-form');
+            // Xóa thông báo lỗi cũ khi chuyển form
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('reg-error').classList.add('hidden');
+        }
+
+        // Logic Xử lý Đăng Nhập
+        async function handleLogin() {
+    const user = document.getElementById('login-user').value;
+    const pass = document.getElementById('login-pass').value;
+    const errorElement = document.getElementById('login-error');
+
+    if (!user || !pass) {
+        errorElement.innerText = "Vui lòng nhập đầy đủ thông tin!";
+        errorElement.classList.remove('hidden');
+        return;
+    }
+
+    try {
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        
+        const data = await res.json();
+
+       if (data.success) {
+            console.log("Dữ liệu từ server:", data);
+            // Đổi 'huno_user' thành 'username' cho khớp với navbar.js
+            localStorage.setItem('username', data.username); 
+            localStorage.setItem('role', data.role); 
+            
+            alert("Chào mừng " + data.username + " quay trở lại!");
+
+            // Chuyển hướng dựa trên quyền
+            if (data.role === 'admin') {
+                window.location.href = "admin.html"; 
+            } else {
+                window.location.href = "index.html"; 
+            }
+        }
+    } catch (e) {
+        errorElement.innerText = "Lỗi kết nối Server!";
+        errorElement.classList.remove('hidden');
+    }
+}
+        // Logic Xử lý Đăng Ký + Check dữ liệu
+        async function handleRegister() {
+            const user = document.getElementById('reg-user').value;
+            const pass = document.getElementById('reg-pass').value;
+            const confirm = document.getElementById('reg-confirm').value;
+            const errorElement = document.getElementById('reg-error');
+
+            // 1. Kiểm tra trống
+            if (!user || !pass || !confirm) {
+                errorElement.innerText = "Không được để trống ô nào bạn nhé!";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            // 2. Kiểm tra độ dài mật khẩu
+            if (pass.length < 6) {
+                errorElement.innerText = "Mật khẩu phải từ 6 ký tự trở lên!";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            // 3. Kiểm tra mật khẩu khớp nhau
+            if (pass !== confirm) {
+                errorElement.innerText = "Xác nhận mật khẩu không khớp!";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                const data = await res.json();
+                
+                if (res.ok && data.success) {
+                    alert("Đăng ký thành công! Hãy đăng nhập nhé.");
+                    toggleForm(); 
+                } else {
+                    // Hiển thị lỗi từ server (ví dụ: "Tên đăng nhập đã tồn tại")
+                    errorElement.innerText = data.message || "Đăng ký thất bại!";
+                    errorElement.classList.remove('hidden');
+                }
+            } catch (e) {
+                errorElement.innerText = "Lỗi kết nối Server!";
+                errorElement.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

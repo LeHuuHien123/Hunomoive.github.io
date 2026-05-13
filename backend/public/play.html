@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Huno Movie | Đang xem...</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="play.css">
+</head>
+<body style="background-color: #060606; color: white; margin: 0; font-family: sans-serif;">
+
+    <script src="navbar.js"></script>
+    <div style="padding-top: 110px; max-width: 1200px; margin: 0 auto; padding-left: 20px; padding-right: 20px;">
+        
+        <div id="video-container" style="position: relative; width: 100%; aspect-ratio: 16/9; background-color: black; border-radius: 12px; overflow: hidden; border: 1px solid #262626;">
+            <div style="display: flex; height: 100%; align-items: center; justify-content: center; color: #737373;">
+                <i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i> Đang tải phim...
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
+            
+            <div>
+                <h2 id="movie-title" style="font-size: 36px; font-weight: 800; margin: 0 0 15px 0; color: white; text-transform: uppercase;"></h2>
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+                    <span style="background-color: #e50914; font-size: 10px; font-weight: bold; padding: 4px 8px; border-radius: 4px;">4K FULL HD</span>
+                    <span id="movie-genres" style="color: #a3a3a3; font-size: 14px; font-style: italic;"></span>
+                </div>
+                <p id="movie-desc" style="color: #a3a3a3; line-height: 1.6; font-size: 18px; background-color: #141414; padding: 25px; border-radius: 10px; border-left: 4px solid #e50914; margin: 0;"></p>
+            </div>
+            
+
+            <div style="background-color: #111; padding: 25px; border-radius: 12px; border: 1px solid #262626; height: fit-content;">
+                <h3 style="font-size: 20px; font-weight: bold; margin: 0 0 25px 0; display: flex; align-items: center; border-bottom: 1px solid #262626; padding-bottom: 15px;">
+                    <i class="fas fa-layer-group" style="margin-right: 12px; color: #e50914;"></i> DANH SÁCH TẬP
+                </h3>
+                <div id="episode-list" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                    </div>
+            </div>
+            <div class="comment_box" style="background-color: #141414; padding: 25px; border-radius: 12px; border: 1px solid #262626; height: fit-content;">
+                <h3 style="font-size: 20px; font-weight: bold; margin: 0 0 25px 0; display: flex; align-items: center; border-bottom: 1px solid #262626; padding-bottom: 15px;">
+                    <i class="fas fa-comments" style="margin-right: 12px; color: #e50914;"></i> BÌNH LUẬN
+                </h3>
+                
+                <div style="margin-bottom: 25px;">
+                    <textarea id="comment-input" placeholder="Viết bình luận của bạn..." style="width: 100%; background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; resize: none; outline: none;"></textarea>
+                    <button onclick="submitComment()" style="margin-top: 10px; background: #e50914; color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; float: right;">Gửi</button>
+                    <div style="clear: both;"></div>
+                </div>
+
+                <div id="comment-list" style="max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;">
+                    <p style="color: #737373; font-size: 14px;">Đang tải bình luận...</p>
+                </div>
+
+                <div id="pagination-controls" style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const movieId = urlParams.get('id');
+    
+    // Biến quản lý phân trang
+    let allComments = [];
+    let currentPage = 1;
+    const commentsPerPage = 10;
+
+    // 1. Tải thông tin chi tiết phim (Giữ nguyên logic của ông)
+    async function loadMovieDetails() {
+    try {
+        const res = await fetch('/api/films');
+        const movies = await res.json();
+        const movie = movies.find(m => m.id == movieId);
+
+        if (!movie) { alert("Không tìm thấy phim!"); return; }
+
+        // 1. Hiển thị thông tin chữ
+        document.getElementById('movie-title').innerText = movie.name_film;
+        document.getElementById('movie-desc').innerText = movie.description || "Đang cập nhật nội dung...";
+        if(movie.genres) document.getElementById('movie-genres').innerText = "Thể loại: " + movie.genres;
+
+        // 2. Xử lý danh sách tập phim
+        const epContainer = document.getElementById('episode-list');
+        epContainer.innerHTML = ''; // Xóa trắng trước khi nạp
+
+        if (movie.videos) {
+            // Tách danh sách tập: hỗ trợ cả dấu xuống dòng hoặc dấu phẩy
+            const videoList = movie.videos.includes('\n') 
+                ? movie.videos.split('\n') 
+                : movie.videos.split(',');
+
+            videoList.forEach((link, index) => {
+                const cleanLink = link.trim();
+                if (!cleanLink) return; // Bỏ qua nếu dòng trống
+
+                const epNumber = index + 1;
+                const btn = document.createElement('button');
+                btn.id = `ep-btn-${epNumber}`;
+                btn.innerText = epNumber; // Hiện số tập cho gọn
+                
+                // Style cho nút tập phim
+                Object.assign(btn.style, {
+                    backgroundColor: "#262626", color: "white", padding: "12px 0",
+                    borderRadius: "8px", fontWeight: "bold", border: "1px solid transparent",
+                    cursor: "pointer", transition: "0.3s"
+                });
+
+                btn.onclick = () => { 
+                    playVideo(cleanLink); 
+                    setActiveButton(epNumber); 
+                };
+                
+                epContainer.appendChild(btn);
+            });
+
+            // Tự động phát tập 1
+            const firstVideo = videoList[0].trim();
+            if (firstVideo) {
+                playVideo(firstVideo);
+                setActiveButton(1);
+            }
+        } else {
+            epContainer.innerHTML = '<p style="color: #737373; grid-column: 1/-1;">Phim đang cập nhật tập mới...</p>';
+        }
+
+        loadComments(); // Tải bình luận sau cùng
+
+    } catch (err) { 
+        console.error("Lỗi tải phim:", err); 
+    }
+}
+
+    // 2. Hàm tải và xử lý phân trang bình luận (SỬA LẠI Ở ĐÂY)
+    async function loadComments() {
+        try {
+            const res = await fetch(`/api/comments/${movieId}`);
+            allComments = await res.json();
+            renderCommentPage(1); // Luôn hiển thị trang 1 khi mới tải
+        } catch (err) {
+            console.error("Lỗi tải bình luận:", err);
+        }
+    }
+
+    function renderCommentPage(page) {
+        currentPage = page;
+        const list = document.getElementById('comment-list');
+        const controls = document.getElementById('pagination-controls');
+        
+        // Tính toán cắt mảng bình luận
+        const start = (page - 1) * commentsPerPage;
+        const end = start + commentsPerPage;
+        const currentItems = allComments.slice(start, end);
+
+        if (allComments.length === 0) {
+            list.innerHTML = '<p style="color: #737373; text-align: center; margin-top: 20px;">Chưa có bình luận nào.</p>';
+            controls.innerHTML = '';
+            return;
+        }
+
+        // Hiển thị bình luận (Dàn hàng dọc - flex-direction: column)
+        list.style.display = "flex";
+        list.style.flexDirection = "column";
+        list.style.gap = "10px";
+
+        list.innerHTML = currentItems.map(c => `
+            <div style="background: #0a0a0a; padding: 12px; border-radius: 8px; border: 1px solid #1f1f1f; width: 100%; box-sizing: border-box;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: #e50914; font-weight: 800; font-size: 13px;">@${c.username.toUpperCase()}</span>
+                    <span style="color: #525252; font-size: 10px;">${new Date(c.created_at).toLocaleString('vi-VN')}</span>
+                </div>
+                <p style="color: #e5e5e5; font-size: 14px; line-height: 1.5; margin: 0;">${c.content}</p>
+            </div>
+        `).join('');
+
+        renderPaginationButtons();
+    }
+
+    function renderPaginationButtons() {
+        const controls = document.getElementById('pagination-controls');
+        const totalPages = Math.ceil(allComments.length / commentsPerPage);
+        controls.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = i;
+            Object.assign(btn.style, {
+                padding: "5px 12px", border: "none", borderRadius: "4px",
+                backgroundColor: i === currentPage ? "#e50914" : "#262626",
+                color: "white", cursor: "pointer", fontWeight: "bold"
+            });
+            btn.onclick = () => {
+                renderCommentPage(i);
+                document.querySelector('.comment_box').scrollIntoView({ behavior: 'smooth' });
+            };
+            controls.appendChild(btn);
+        }
+    }
+
+    // 3. Gửi bình luận
+    async function submitComment() {
+        const input = document.getElementById('comment-input');
+        const content = input.value.trim();
+        const username = localStorage.getItem('username') || 'Khách ẩn danh';
+
+        if (!content) return;
+
+        try {
+            const res = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filmId: movieId, username, content })
+            });
+
+            if (res.ok) {
+                input.value = '';
+                await loadComments(); // Tải lại dữ liệu mới nhất
+            }
+        } catch (err) { alert("Lỗi kết nối server!"); }
+    }
+
+    // Các hàm phụ (Giữ nguyên)
+    function setActiveButton(epNumber) {
+        const buttons = document.querySelectorAll('#episode-list button');
+        buttons.forEach(b => { b.style.backgroundColor = "#262626"; b.style.borderColor = "transparent"; });
+        const activeBtn = document.getElementById(`ep-btn-${epNumber}`);
+        if(activeBtn) { activeBtn.style.backgroundColor = "#e50914"; activeBtn.style.borderColor = "white"; }
+    }
+
+    function playVideo(source) {
+    const container = document.getElementById('video-container');
+    if (!source) return;
+    const val = source.trim();
+    const isYouTube = val.includes('youtube.com') || val.includes('youtu.be') || (!val.includes('/') && val.length < 15);
+
+    if (isYouTube) {
+        let id = val;
+        if (val.includes('http')) {
+            const url = new URL(val);
+            id = url.searchParams.get('v') || val.split('/').pop();
+        }
+        container.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1" 
+            style="width: 100%; height: 100%; border: none;" allowfullscreen allow="autoplay"></iframe>`;
+    } else {
+        const finalUrl = val.startsWith('http') ? val : (val.startsWith('/') ? val : '/' + val);
+        
+        // Cấu trúc HTML có đầy đủ ID để không còn bị lỗi "null"
+        container.innerHTML = `
+            <div class="group relative w-full h-full bg-black">
+                <video id="main-video" class="w-full h-full" autoplay>
+                    <source src="${finalUrl}" type="video/mp4">
+                </video>
+                <div id="custom-controls" class="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-2 z-10 bg-gradient-to-t from-black/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <input type="range" id="seek-bar" value="0" step="0.1" class="w-full accent-red-600 cursor-pointer">
+                    <div class="flex items-center justify-between mt-2">
+                        <div class="flex items-center gap-6">
+                            <i id="backward-5s" class="fas fa-undo text-white cursor-pointer hover:text-red-500"></i>
+                            <i id="play-pause" class="fas fa-pause text-white cursor-pointer hover:text-red-500"></i>
+                            <i id="forward-5s" class="fas fa-redo text-white cursor-pointer hover:text-red-500"></i>
+                            <div class="text-sm font-bold text-white">
+                                <span id="current-time">00:00</span> / <span id="duration-time">00:00</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 group/vol">
+                                <i id="mute-btn" class="fas fa-volume-up text-white cursor-pointer hover:text-red-500"></i>
+                                <input type="range" id="volume-bar" min="0" max="1" step="0.1" value="1" 
+                                    class="w-0 overflow-hidden group-hover/vol:w-20 transition-all duration-300 accent-red-600 cursor-pointer">
+                            </div>
+
+                            <div class="relative group/speed">
+                                <i id="speed-btn" class="fas fa-cog text-white cursor-pointer hover:text-red-500" title="Cài đặt"></i>
+                                <div id="speed-menu" class="absolute bottom-full right-0 mb-2 bg-[#141414] border border-[#262626] rounded-md py-2 w-32 hidden group-hover/speed:block">
+                                    <div class="px-4 py-2 hover:bg-red-600 cursor-pointer text-xs speed-opt" data-speed="0.5">0.5x</div>
+                                    <div class="px-4 py-2 hover:bg-red-600 cursor-pointer text-xs speed-opt" data-speed="1">Bình thường</div>
+                                    <div class="px-4 py-2 hover:bg-red-600 cursor-pointer text-xs speed-opt" data-speed="1.5">1.5x</div>
+                                    <div class="px-4 py-2 hover:bg-red-600 cursor-pointer text-xs speed-opt" data-speed="2">2.0x</div>
+                                </div>
+                            </div>
+
+                            <i id="next-ep-btn" class="fas fa-step-forward text-white cursor-pointer hover:text-red-500" title="Tập tiếp theo"></i>
+                            <i id="full-screen" class="fas fa-expand text-white cursor-pointer hover:text-red-500"></i>
+                        </div>
+                </div>
+            </div>`;
+        setupPlayerLogic(); // Chỉ gọi khi đã có các ID trên
+    }
+}
+function setupPlayerLogic() {
+    const video = document.getElementById('main-video');
+    const container = document.getElementById('video-container'); // Đưa lên đầu hàm này ông
+    const controls = document.getElementById('custom-controls');
+    const playBtn = document.getElementById('play-pause');
+    const seekBar = document.getElementById('seek-bar');
+    const curTimeText = document.getElementById('current-time');
+    const durTimeText = document.getElementById('duration-time');
+    const volBar = document.getElementById('volume-bar');
+    const muteBtn = document.getElementById('mute-btn');
+    const fullScreenBtn = document.getElementById('full-screen');
+    const btnBack = document.getElementById('backward-5s');
+    const btnForward = document.getElementById('forward-5s');
+    const nextEpBtn = document.getElementById('next-ep-btn');
+    const speedOpts = document.querySelectorAll('.speed-opt');
+
+
+    const playNextEpisode = () => {
+        // Tìm nút tập đang có màu đỏ (active)
+        const currentActive = document.querySelector('#episode-list button[style*="background-color: rgb(229, 9, 20)"]');
+        if (currentActive) {
+            const nextBtn = currentActive.nextElementSibling;
+            if (nextBtn && nextBtn.tagName === 'BUTTON') {
+                nextBtn.click();
+            } else {
+                alert("Bạn đã xem đến tập cuối cùng!");
+            }
+        }
+    };
+    if(nextEpBtn) nextEpBtn.onclick = (e) => { e.stopPropagation(); playNextEpisode(); };
+
+    // 2. Logic chỉnh tốc độ video
+    speedOpts.forEach(opt => {
+        opt.onclick = (e) => {
+            e.stopPropagation();
+            const speed = opt.getAttribute('data-speed');
+            video.playbackRate = parseFloat(speed);
+            
+            // Highlight lựa chọn đang dùng
+            speedOpts.forEach(o => o.classList.remove('text-red-500'));
+            opt.classList.add('text-red-500');
+            
+            // Ẩn menu sau khi chọn (nếu cần)
+            document.getElementById('speed-menu').classList.add('hidden');
+            setTimeout(() => document.getElementById('speed-menu').classList.remove('hidden'), 100);
+        };
+    });
+
+    // 3. Tự động chuyển tập khi hết phim (Sửa lại cho chuẩn)
+    video.onended = playNextEpisode;
+
+    const formatTime = (time) => {
+        const min = Math.floor(time / 60);
+        const sec = Math.floor(time % 60);
+        return `${min < 10 ? '0' + min : min}:${sec < 10 ? '0' + sec : sec}`;
+    };
+    
+    const togglePlay = () => {
+        if (video.paused) { video.play(); playBtn.className = "fas fa-pause"; }
+        else { video.pause(); playBtn.className = "fas fa-play"; }
+    };
+
+    // Xử lý Tua 5s
+    const skip = (seconds) => { video.currentTime += seconds; };
+    btnBack.onclick = () => skip(-5);
+    btnForward.onclick = () => skip(5);
+    playBtn.onclick = togglePlay;
+
+    // Phím tắt bàn phím
+    document.onkeydown = (e) => {
+        if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+        if (e.key === "ArrowLeft") skip(-5);
+        if (e.key === "ArrowRight") skip(5);
+        if (e.key === " ") { e.preventDefault(); togglePlay(); }
+    };
+
+    video.ontimeupdate = () => {
+        const val = (video.currentTime / video.duration) * 100;
+        seekBar.value = val || 0;
+        curTimeText.innerText = formatTime(video.currentTime);
+        // Làm thanh tiến trình màu đỏ
+        seekBar.style.background = `linear-gradient(90deg, #e50914 ${val}%, #444 ${val}%)`;
+    };
+
+    video.onloadedmetadata = () => { durTimeText.innerText = formatTime(video.duration); };
+    
+    seekBar.oninput = () => { video.currentTime = (seekBar.value / 100) * video.duration; };
+    
+    volBar.oninput = () => { 
+        video.volume = volBar.value;
+        muteBtn.className = video.volume == 0 ? "fas fa-volume-mute" : "fas fa-volume-up";
+    };
+    muteBtn.onclick = (e) => {
+        e.stopPropagation();
+        video.muted = !video.muted;
+        if (video.muted) {
+            muteBtn.className = "fas fa-volume-mute text-red-500";
+            volBar.value = 0;
+        } else {
+            muteBtn.className = "fas fa-volume-up text-white";
+            volBar.value = video.volume;
+        }
+    };
+    fullScreenBtn.onclick = () => {
+        if (!document.fullscreenElement) {
+            if (container.requestFullscreen) container.requestFullscreen();
+            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+            fullScreenBtn.className = "fas fa-compress text-white cursor-pointer hover:text-red-500";
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            fullScreenBtn.className = "fas fa-expand text-white cursor-pointer hover:text-red-500";
+        }
+    };
+
+    // LOGIC ẨN THANH CÔNG CỤ (Đã sửa lỗi reference)
+    let timeout;
+    const hideControls = () => {
+        if (video.paused) return; 
+        controls.style.opacity = "0";
+        container.style.cursor = "none"; // Ẩn luôn con trỏ chuột cho chuyên nghiệp
+    };
+
+    container.onmousemove = () => {
+        controls.style.opacity = "1";
+        container.style.cursor = "default";
+        clearTimeout(timeout);
+        timeout = setTimeout(hideControls, 3000); 
+    };
+
+    // Đảm bảo khi di chuột ra khỏi container là ẩn luôn (tùy chọn)
+    container.onmouseleave = () => {
+        if (!video.paused) {
+            timeout = setTimeout(hideControls, 500);
+        }
+    };
+}
+    document.getElementById('comment-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); }
+    });
+
+    loadMovieDetails();
+</script>
+</body>
+</html>

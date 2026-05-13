@@ -1,0 +1,7 @@
+node_modules/
+    postgres_data/
+    *.mp4
+    *.mov
+    backend/public/uploads/
+    data/
+    .envgit init

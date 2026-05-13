@@ -1,0 +1,60 @@
+services:
+  # Database: PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: huno_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hunomovie
+    ports:
+      - "5432:5432"
+    volumes:
+      # Giữ nguyên để lưu database vào thư mục postgres_data trên máy ông
+      - ./postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: huno_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@huno.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    restart: always
+
+  backend:
+    build: ./backend
+    container_name: hunomovie-backend
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/hunomovie
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      # CHỈ DÙNG 1 DÒNG NÀY: Lưu ảnh/video trực tiếp vào thư mục backend trên máy thật
+      - ./backend/public/uploads:/app/public/uploads
+    depends_on:
+      - db
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: huno_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    depends_on:
+      - backend
+    restart: always
+
+# KHÔNG KHAI BÁO huno_uploads ở đây nếu dùng đường dẫn ./ như trên
+volumes:
+  postgres_data:

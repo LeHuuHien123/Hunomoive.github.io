@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Huno Movie | Trang Chủ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #060606; color: #fff; scroll-behavior: smooth; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .movie-card-img { transition: transform 0.4s ease; width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+        .movie-card:hover .movie-card-img { transform: scale(1.1); }
+        .dropdown-menu { opacity: 0; visibility: hidden; transition: 0.3s; z-index: 100; }
+        .group:hover .dropdown-menu { opacity: 1; visibility: visible; }
+        /* Thanh cuộn đẹp cho trình duyệt */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #060606; }
+        ::-webkit-scrollbar-thumb { background: #e50914; border-radius: 10px; }
+        .movie-card:hover div[style*="background-color: rgba(229, 9, 20"] {
+    transform: scale(1.1);
+    transition: 0.3s;
+}
+    </style>
+</head>
+<body>
+
+    <script src="navbar.js"></script>
+
+    <header style="position: relative; height: 90vh; width: 100%; overflow: hidden;">
+        <img id="hero-img" src="https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop" 
+             style="position: absolute; width: 100%; height: 100%; object-fit: cover;" alt="Hero">
+        <div style="position: absolute; inset: 0; background: linear-gradient(0deg, #060606 5%, rgba(6,6,6,0) 60%);"></div>
+        
+        <div style="position: absolute; bottom: 15%; left: 5%; max-width: 800px;">
+            <h2 id="hero-title" style="font-size: 80px; font-weight: 900; margin: 0; line-height: 0.9; text-transform: uppercase;">
+                HUNO <br><span style="color: #e50914;">Cinema</span>
+            </h2>
+            <p id="hero-desc" style="font-size: 18px; color: #d4d4d4; margin-top: 25px; max-width: 500px; line-height: 1.5;">
+                Khám phá kho phim khổng lồ và trải nghiệm chất lượng 4K ngay hôm nay tại Huno Movie.
+            </p>
+            <div style="margin-top: 35px;">
+                <button onclick="document.getElementById('main-content').scrollIntoView({behavior:'smooth'})" style="background-color: white; color: black; padding: 16px 40px; border-radius: 4px; font-weight: 900; border: none; cursor: pointer; display: flex; align-items: center; transition: 0.3s; font-size: 16px;">
+                    <i class="fas fa-play" style="margin-right: 12px;"></i> XEM NGAY
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="main-content" style="padding: 0 50px 80px 50px; margin-top: -80px; position: relative; z-index: 10;">
+        
+        <div id="loading" style="text-align: center; padding: 50px; display: none;">
+            <i class="fas fa-spinner fa-spin fa-2x" style="color: #e50914;"></i>
+            <p style="margin-top: 15px; color: #a3a3a3;">Đang tải kho phim...</p>
+        </div>
+
+        <section id="filter-section" style="display: none; margin-bottom: 60px;">
+            <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 25px; display: flex; align-items: center;">
+                <span style="width: 4px; height: 30px; background-color: #e50914; margin-right: 15px;"></span> 
+                <span id="filter-title">PHIM THEO THỂ LOẠI</span>
+            </h3>
+            <div id="filter-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px;"></div>
+        </section>
+
+        <div id="home-sections">
+            <section style="margin-bottom: 60px;">
+                <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 25px; display: flex; align-items: center;">
+                    <span style="width: 4px; height: 30px; background-color: #e50914; margin-right: 15px;"></span> PHIM LẺ MỚI NHẤT
+                </h3>
+                <div id="grid-phim-le" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px;"></div>
+            </section>
+
+            <section>
+                <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 25px; display: flex; align-items: center;">
+                    <span style="width: 4px; height: 30px; background-color: #e50914; margin-right: 15px;"></span> PHIM BỘ ĐANG HOT
+                </h3>
+                <div id="grid-phim-bo" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px;"></div>
+            </section>
+        </div>
+    </div>
+
+    <footer style="padding: 50px; border-top: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center; color: #525252; font-size: 14px;">
+        <p>&copy; 2026 HUNO MOVIE. Created by HienLH.</p>
+        <div style="display: flex; gap: 30px;">
+            <a href="#" style="color: #525252; text-decoration: none;">Điều khoản</a>
+            <a href="#" style="color: #525252; text-decoration: none;">Liên hệ</a>
+        </div>
+    </footer>
+
+    <script>
+        let allMovies = [];
+
+        // 1. Hiệu ứng Navbar
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            nav.style.backgroundColor = window.scrollY > 50 ? "rgba(6, 6, 6, 0.95)" : "transparent";
+        });
+
+        // 2. Hàm tạo Card
+       const createMovieCard = (f) => {
+    // Ưu tiên hiển thị số tập nếu là phim bộ, nếu không có thì mới dùng duration
+    let badgeDisplay = "";
+    
+    if (f.type_film === 'Phim Bộ') {
+        // Nếu f.episodes có giá trị (ví dụ: "12/12" hoặc "10"), thì hiện nó
+        // Nếu không có thì mới hiện duration
+        badgeDisplay = f.episodes ? (f.episodes.includes('Tập') ? f.episodes : f.episodes + ' Tập') : f.duration;
+    } else {
+        badgeDisplay = f.duration; // Phim lẻ hiện phút
+    }
+
+    return `
+        <div class="movie-card" style="position: relative; cursor: pointer; border-radius: 8px; overflow: hidden; background-color: #111;" 
+             onclick="window.location.href='play.html?id=${f.id}'">
+            
+            <div style="position: absolute; top: 10px; right: 10px; z-index: 20; background-color: rgba(229, 9, 20, 0.9); color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 900;">
+                ${badgeDisplay}
+            </div>
+
+            <img src="${f.image}" class="movie-card-img" style="width: 100%; aspect-ratio: 2/3; object-fit: cover;">
+            
+            <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent 60%); display: flex; flex-direction: column; justify-content: end; padding: 15px;">
+                <p style="font-weight: bold; margin: 0; font-size: 14px; color: white;">${f.name_film}</p>
+                <p style="color: #e50914; font-size: 10px; font-weight: 800; margin-top: 5px; text-transform: uppercase;">${f.genres}</p>
+            </div>
+        </div>
+    `;
+};
+        // 3. Tải dữ liệu
+        // 3. Tải dữ liệu và hiển thị vào đúng grid
+async function loadMovies() {
+    const loading = document.getElementById('loading');
+    if (loading) loading.style.display = 'block';
+
+    try {
+        const res = await fetch('/api/films');
+        if (!res.ok) throw new Error("Lỗi kết nối server");
+
+        allMovies = await res.json(); // Lưu vào biến toàn cục để dùng cho hàm filter/search
+
+        // Lọc phim theo loại
+        const phimLe = allMovies.filter(m => m.type_film === 'Phim Lẻ');
+        const phimBo = allMovies.filter(m => m.type_film === 'Phim Bộ');
+
+        // Lấy các container grid trong HTML của ông
+        const gridLe = document.getElementById('grid-phim-le');
+        const gridBo = document.getElementById('grid-phim-bo');
+
+        // Đổ dữ liệu vào Grid Phim Lẻ
+        if (gridLe) {
+            gridLe.innerHTML = phimLe.length > 0 
+                ? phimLe.map(m => createMovieCard(m)).join('') 
+                : '<p class="text-gray-500">Chưa có phim lẻ nào.</p>';
+        }
+
+        // Đổ dữ liệu vào Grid Phim Bộ
+        if (gridBo) {
+            gridBo.innerHTML = phimBo.length > 0 
+                ? phimBo.map(m => createMovieCard(m)).join('') 
+                : '<p class="text-gray-500">Chưa có phim bộ nào.</p>';
+        }
+
+    } catch (err) {
+        console.error("Lỗi fetch phim:", err);
+    } finally {
+        if (loading) loading.style.display = 'none';
+    }
+}
+
+        // 4. Render Phim
+        function renderMovies(movies, isFilter = false) {
+            const filterSection = document.getElementById('filter-section');
+            const homeSections = document.getElementById('home-sections');
+            const filterGrid = document.getElementById('filter-grid');
+            const gridLe = document.getElementById('grid-phim-le');
+            const gridBo = document.getElementById('grid-phim-bo');
+
+            if (isFilter) {
+                homeSections.style.display = 'none';
+                filterSection.style.display = 'block';
+                filterGrid.innerHTML = movies.length ? movies.map(createMovieCard).join('') : '<p style="grid-column: 1/-1; text-align: center; color: #555;">Không tìm thấy phim phù hợp.</p>';
+            } else {
+                filterSection.style.display = 'none';
+                homeSections.style.display = 'block';
+                const phimLe = movies.filter(m => m.type_film === 'Phim Lẻ');
+                const phimBo = movies.filter(m => m.type_film === 'Phim Bộ');
+                gridLe.innerHTML = phimLe.map(createMovieCard).join('');
+                gridBo.innerHTML = phimBo.map(createMovieCard).join('');
+            }
+        }
+
+        // 5. Lọc theo thể loại
+        function filterByGenre(genre) {
+            if (genre === 'Tất cả') {
+                renderMovies(allMovies, false);
+            } else {
+                const filtered = allMovies.filter(m => 
+                    (m.genres && m.genres.includes(genre)) || (m.type_film && m.type_film === genre)
+                );
+                document.getElementById('filter-title').innerText = `PHIM: ${genre.toUpperCase()}`;
+                renderMovies(filtered, true);
+            }
+            window.scrollTo({ top: 500, behavior: 'smooth' });
+        }
+
+        // 6. Tìm kiếm phim
+        function searchMovie() {
+            const val = document.getElementById('search-input').value.toLowerCase();
+            if (val === '') {
+                renderMovies(allMovies, false);
+                return;
+            }
+            const filtered = allMovies.filter(m => m.name_film.toLowerCase().includes(val));
+            document.getElementById('filter-title').innerText = `KẾT QUẢ TÌM KIẾM: "${val}"`;
+            renderMovies(filtered, true);
+        }
+
+       function checkLoginStatus() {
+            const username = localStorage.getItem('username'); // Thống nhất dùng 'username'
+            const role = localStorage.getItem('role');
+            
+            const loginBtn = document.getElementById('login-btn');
+            const userDropdown = document.getElementById('user-dropdown');
+            const userDisplayName = document.getElementById('user-display-name');
+            const adminLink = document.getElementById('admin-link');
+            const userAvatar = document.getElementById('user-avatar');
+
+            if (username) {
+                // 1. Ẩn nút đăng nhập, hiện dropdown user
+                if(loginBtn) loginBtn.style.display = 'none';
+                if(userDropdown) userDropdown.style.display = 'flex';
+                
+                // 2. Hiển thị tên và avatar tương ứng
+                if(userDisplayName) userDisplayName.innerText = username;
+                if(userAvatar) userAvatar.src = `https://ui-avatars.com/api/?name=${username}&background=E50914&color=fff`;
+
+                // 3. Nếu là admin thì hiện link quản trị
+                if (role === 'admin' && adminLink) {
+                    adminLink.style.display = 'inline';
+                }
+            } else {
+                // Nếu chưa đăng nhập thì trả về trạng thái mặc định
+                if(loginBtn) loginBtn.style.display = 'block';
+                if(userDropdown) userDropdown.style.display = 'none';
+                if(adminLink) adminLink.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLoginStatus();
+            loadMovies();
+        });
+        function logout() {
+            if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                localStorage.clear(); // Xóa sạch toàn bộ để không bị sót key cũ (huno_user, username,...)
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

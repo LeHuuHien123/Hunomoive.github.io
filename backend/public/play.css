@@ -1,0 +1,52 @@
+/* Tùy chỉnh thanh Seekbar (Progress Bar) */
+#seek-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 5px;
+    background: #444;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: height 0.1s;
+}
+#seek-bar:hover { height: 8px; }
+#seek-bar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 15px; width: 15px;
+    border-radius: 50%;
+    background: #e50914;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+}
+
+/* Ẩn controls mặc định của video */
+video::-webkit-media-controls { display: none !important; }
+
+/* Hiệu ứng hiện/ẩn Control Bar */
+#custom-controls {
+    opacity: 0;
+    transition: opacity 0.3s;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+}
+#video-container:hover #custom-controls { opacity: 1; }
+/* Đảm bảo container chiếm hết màn hình khi fullscreen */
+#video-container:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    display: flex;
+    align-items: center;
+}
+
+/* Đẩy thanh công cụ lên trên cùng */
+#custom-controls {
+    z-index: 2147483647; /* Giá trị cao nhất có thể */
+    transition: opacity 0.5s ease-in-out;
+}
+/* Nút bấm trong Player */
+.player-btn {
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.player-btn:hover { transform: scale(1.2); color: #e50914; }

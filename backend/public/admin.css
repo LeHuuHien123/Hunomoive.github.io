@@ -1,0 +1,45 @@
+    /* Tùy chỉnh toàn bộ thanh cuộn cho phần nội dung modal */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px; /* Độ rộng thanh cuộn */
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #111827; /* Màu nền đường ray (gray-900) */
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #4b5563; /* Màu thanh kéo (gray-600) */
+    border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #ef4444; /* Màu đỏ khi di chuột vào (red-500) */
+}
+/* Tùy chỉnh thanh cuộn cho các ô Textarea (đặc biệt là f-videos) */
+#f-videos::-webkit-scrollbar,
+#f-desc::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+    width: 5px; /* Làm thanh kéo mảnh cho tinh tế */
+}
+
+/* Nền của đường ray thanh kéo */
+#f-videos::-webkit-scrollbar-track,
+#f-desc::-webkit-scrollbar-track {
+    background: #1f2937; /* Màu gray-800 giống nền ô input */
+    border-radius: 10px;
+}
+
+/* Màu của thanh kéo (Cục chạy lên chạy xuống) */
+#f-videos::-webkit-scrollbar-thumb,
+#f-desc::-webkit-scrollbar-thumb {
+    background: rgba(147, 197, 253, 0.3); /* Màu xanh blue-300 mờ mờ */
+    border-radius: 10px;
+    border: 1px solid rgba(147, 197, 253, 0.1);
+}
+
+/* Hiệu ứng khi rê chuột vào thanh kéo: Đổi sang màu đỏ giống viền focus */
+#f-videos::-webkit-scrollbar-thumb:hover,
+#f-desc::-webkit-scrollbar-thumb:hover {
+    background: #dc2626; /* Màu đỏ red-600 */
+    box-shadow: 0 0 5px rgba(220, 38, 38, 0.5);
+}
