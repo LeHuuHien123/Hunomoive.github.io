@@ -1,8 +1,10 @@
+version: '3.8'
+
 services:
-  # Database: PostgreSQL
+  # ================= Dịch vụ Database PostgreSQL =================
   db:
-    image: postgres:15-alpine
-    container_name: huno_db
+    image: postgres:16-alpine
+    container_name: hunomovie_db
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -10,10 +12,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Giữ nguyên để lưu database vào thư mục postgres_data trên máy ông
-      - ./postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     restart: always
 
+  # ================= Dịch vụ quản lý DB (pgAdmin) =================
   pgadmin:
     image: dpage/pgadmin4
     container_name: huno_pgadmin
@@ -26,6 +28,7 @@ services:
       - db
     restart: always
 
+  # ================= Dịch vụ Backend (NodeJS) =================
   backend:
     build: ./backend
     container_name: hunomovie-backend
@@ -36,12 +39,13 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      # CHỈ DÙNG 1 DÒNG NÀY: Lưu ảnh/video trực tiếp vào thư mục backend trên máy thật
+      # Chỉ đồng bộ folder uploads nếu thư mục backend/public/uploads có tồn tại trên máy ông
       - ./backend/public/uploads:/app/public/uploads
     depends_on:
       - db
     restart: always
 
+  # ================= Dịch vụ Frontend =================
   frontend:
     build: ./frontend
     container_name: huno_frontend
@@ -55,6 +59,6 @@ services:
       - backend
     restart: always
 
-# KHÔNG KHAI BÁO huno_uploads ở đây nếu dùng đường dẫn ./ như trên
+# Khai báo volume cho Database
 volumes:
   postgres_data:
